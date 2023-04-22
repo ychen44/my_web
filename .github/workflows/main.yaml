@@ -1,0 +1,32 @@
+name: example_2_branch_names
+
+on: [push]   
+
+env:
+  EXAMPLE_VARIABLE: test1234
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      branch: ${{ steps.check_step.outputs.branch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Get current branch
+        id: check_step
+        run: |
+          raw=$(git branch -r --contains ${{ github.ref }})
+          branch=${raw##*/}
+          echo "branch=$branch" >> $GITHUB_OUTPUT
+          echo "Branch is $branch."
+          ls
+      
+  job2:
+    runs-on: ubuntu-latest
+    needs: check # Wait for check step to finish
+    if: ${{ needs.check.outputs.branch == 'master' }} # only run if branch is master
+
+    steps:
+      - run: echo "Running task..."
